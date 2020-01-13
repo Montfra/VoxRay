@@ -10,6 +10,49 @@ struct Sphere{
 	float3 color;
 };
 
+struct Cube {
+	float3 pos;
+};
+
+bool intersect_cube(const struct Cube* cube, const struct Ray* r) {
+
+	float3 lb = (float3)( cube->pos.x, cube->pos.y -0.3f, cube->pos.z -20.0f);
+	float3 rt = (float3)( cube->pos.x + 0.3f,  cube->pos.y, cube->pos.z);
+
+	float3 dirfrac;
+	
+	dirfrac.x = 1.0f / r->dir.x;
+	dirfrac.y = 1.0f / r->dir.y;
+	dirfrac.z = 1.0f / r->dir.z;
+	
+	float t1 = (lb.x - r->origin.x) * dirfrac.x;
+	float t2 = (rt.x - r->origin.x) * dirfrac.x;
+	float t3 = (lb.y - r->origin.y) * dirfrac.y;
+	float t4 = (rt.y - r->origin.y) * dirfrac.y;
+	float t5 = (lb.z - r->origin.z) * dirfrac.z;
+	float t6 = (rt.z - r->origin.z) * dirfrac.z;
+
+	float tmin = max(max(min(t1, t2), min(t3, t4)), min(t5, t6));
+	float tmax = min(min(max(t1, t2), max(t3, t4)), max(t5, t6));
+
+	
+	if (tmax < 0.0f)
+	{
+		
+		return false;
+	}
+
+	
+	if (tmin > tmax)
+	{
+		
+		return false;
+	}
+
+	
+	return true;
+}
+
 bool intersect_sphere(const struct Sphere* sphere, const struct Ray* ray, float* t)
 {
 	float3 rayToCenter = sphere->pos - ray->origin;
@@ -80,16 +123,19 @@ __kernel void render_kernel(int width, int height, int rendermode,__global unsig
 
 	/* create and initialise a sphere */
 	struct Sphere sphere1;
-	float xxx = ((float)rendermode) / 1000.0f;
+	float xxx = (((float)rendermode+80) / 1000.0f)/2;
 	sphere1.radius = xxx;
-	sphere1.pos = (float3)(0.0f, 0.0f, 3.0f);
+	sphere1.pos = (float3)(-0.5f, 0.0f, 3.0f);
 	sphere1.color = (float3)((400 - xxx)/400, 0.6f, xxx/400);
 
 	/* create and initialise a sphere2 */
     	struct Sphere sphere2;
-    	sphere2.radius = 0.5 - xxx;
+    	sphere2.radius = 0.3 - xxx;
     	sphere2.pos = (float3)(0.5f, 0.0f, 3.0f);
     	sphere2.color = (float3)(1 - fy * 0.1f, 1 - fy * 0.3f, 1 - 0.3f);
+
+		struct Cube cube;
+		cube.pos = (float3)(0.3 - xxx, -0.5f, -50.0f);
 
 	rendermode = 3;
 	/* intersect ray with sphere */
@@ -104,7 +150,18 @@ __kernel void render_kernel(int width, int height, int rendermode,__global unsig
 	background colour is a blue-ish gradient dependent on image height */
 	if (t > 1e19 && t2 > 1e19 && rendermode != 1){
 		pix[work_item_id] = rgb(toInt(fy * 0.1f), toInt(fy * 0.3f), toInt(0.3f));
+
+		if (intersect_cube(&cube, &camray))
+		{
+			pix[work_item_id] = rgb(toInt(0.1f), toInt(0.3f), toInt(0.3f));
+		}
+
 		return;
+	}
+
+	if (intersect_cube(&cube, &camray))
+	{
+		pix[work_item_id] = rgb(toInt(0.1f), toInt(0.3f), toInt(0.3f));
 	}
 
 	/* for more interesting lighting: compute normal

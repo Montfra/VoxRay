@@ -13,13 +13,13 @@ using namespace std;
 // CONSTANT
 const string programPath = "opencl_kernel.cl";
 
-int size = 0; // sphere size
+int sphereSize = 0; // sphere size
 int speed = 4; // speed of animation
 
 
 void executeProgram() {
     // SET VARIABLE
-    clSetKernelArg(kernel, 2, sizeof(int), &size);
+    clSetKernelArg(kernel, 2, sizeof(int), &sphereSize);
 
     // EXECUTE PROGRAM
     clEnqueueNDRangeKernel(commands, kernel, 1, NULL, &global, &local, 0, NULL, NULL);
@@ -70,8 +70,8 @@ int main(int argc, char* argv[]) {
 
 
         // CHANGE ANIMATION
-        size += speed;
-        if (size > 400 || size < 0) {
+		sphereSize += speed;
+        if (sphereSize > 400 || sphereSize < 0) {
             speed *= -1;
         }
 
