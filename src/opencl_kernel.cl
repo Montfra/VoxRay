@@ -10,14 +10,19 @@ struct Sphere{
 	float3 color;
 };
 
-struct Cube {
+struct Light {
 	float3 pos;
 };
 
-bool intersect_cube(const struct Cube* cube, const struct Ray* r) {
+struct Cube {
+	float3 pos;
+	float3 color;
+};
 
-	float3 lb = (float3)( cube->pos.x, cube->pos.y -0.3f, cube->pos.z -20.0f);
-	float3 rt = (float3)( cube->pos.x + 0.3f,  cube->pos.y, cube->pos.z);
+bool intersect_cube(const struct Cube* cube, const struct Ray* r, float* t) {
+
+	float3 lb = (float3)( cube->pos.x, cube->pos.y -0.05f, cube->pos.z -0.8f);
+	float3 rt = (float3)( cube->pos.x + 0.05f,  cube->pos.y, cube->pos.z);
 
 	float3 dirfrac;
 	
@@ -38,17 +43,19 @@ bool intersect_cube(const struct Cube* cube, const struct Ray* r) {
 	
 	if (tmax < 0.0f)
 	{
-		
+		*t = tmax;
 		return false;
 	}
 
 	
 	if (tmin > tmax)
 	{
-		
+		*t = tmax;
 		return false;
 	}
 
+
+	*t = tmin;
 	
 	return true;
 }
@@ -109,33 +116,31 @@ __kernel void render_kernel(int width, int height, int rendermode,__global unsig
 {
 
 	const int work_item_id = get_global_id(0);		/* the unique global id of the work item for the current pixel */
-	
+
 	int x_coord = work_item_id % width;					/* x-coordinate of the pixel */
 	int y_coord = work_item_id / width;					/* y-coordinate of the pixel */
 
 	float fx = (float)x_coord / (float)width;  /* convert int in range [0 - width] to float in range [0-1] */
 	float fy = (float)y_coord / (float)height; /* convert int in range [0 - height] to float in range [0-1] */
 
+	float xxx = (((float)rendermode + 80) / 1000.0f) / 2;
 	/*create a camera ray */
 	struct Ray camray = createCamRay(x_coord, y_coord, width, height);
 
-	
+	struct Light light;
+	light.pos = (float3)(0.1f - xxx, 0.1f - xxx, 3.0f);
 
 	/* create and initialise a sphere */
 	struct Sphere sphere1;
-	float xxx = (((float)rendermode+80) / 1000.0f)/2;
-	sphere1.radius = xxx;
-	sphere1.pos = (float3)(-0.5f, 0.0f, 3.0f);
+	sphere1.radius = 0.09f;
+	sphere1.pos = (float3)(0.1f - xxx, 0.1f - xxx, 2.0f);
 	sphere1.color = (float3)((400 - xxx)/400, 0.6f, xxx/400);
 
 	/* create and initialise a sphere2 */
     	struct Sphere sphere2;
-    	sphere2.radius = 0.3 - xxx;
-    	sphere2.pos = (float3)(0.5f, 0.0f, 3.0f);
-    	sphere2.color = (float3)(1 - fy * 0.1f, 1 - fy * 0.3f, 1 - 0.3f);
-
-		struct Cube cube;
-		cube.pos = (float3)(0.3 - xxx, -0.5f, -50.0f);
+    	sphere2.radius = 0.2f;
+    	sphere2.pos = (float3)(0.6f, 0.0f, 3.0f);
+    	sphere2.color = (float3)(0.1f, 0.3f, 0.3f);
 
 	rendermode = 3;
 	/* intersect ray with sphere */
@@ -146,35 +151,59 @@ __kernel void render_kernel(int width, int height, int rendermode,__global unsig
     float t2 = 1e20;
     intersect_sphere(&sphere2, &camray, &t2);
 
+
+	float t3 = 1e20;
 	/* if ray misses sphere, return background colour
 	background colour is a blue-ish gradient dependent on image height */
 	if (t > 1e19 && t2 > 1e19 && rendermode != 1){
-		pix[work_item_id] = rgb(toInt(fy * 0.1f), toInt(fy * 0.3f), toInt(0.3f));
+		pix[work_item_id] = rgb(toInt(0.1f), toInt(0.3f), toInt(0.3f));
 
-		if (intersect_cube(&cube, &camray))
+		float x = -1.0f;
+		float y = 0.0f;
+
+		for (size_t i = 0; i < 400; i++)
 		{
-			pix[work_item_id] = rgb(toInt(0.1f), toInt(0.3f), toInt(0.3f));
+			struct Cube cube;
+			x += 0.06f;
+			
+
+			if (x >= 1.0f)
+			{
+				x = -1.0f;
+				y -= 0.1f;
+			}
+
+			cube.pos = (float3)(x, y, 0.3f);
+			cube.color = (float3)(x, 0.4f, 0.8f);
+
+			if (intersect_cube(&cube, &camray, &t3))
+			{
+				float3 hitpoint3 = camray.origin + camray.dir * t3;
+				float3 normal3 = normalize(hitpoint3 - cube.pos);
+				normal3.z = normal3.z * -1.0f;
+				
+				float cosine_factor3 = (dot(normal3, normalize(hitpoint3 - light.pos)) * -1.0f) + 0.5f;
+				pix[work_item_id] = rgb(toInt((cube.color * cosine_factor3).x), toInt((cube.color * cosine_factor3).y), toInt((cube.color * cosine_factor3).z));
+				return;
+			}
 		}
 
 		return;
 	}
 
-	if (intersect_cube(&cube, &camray))
-	{
-		pix[work_item_id] = rgb(toInt(0.1f), toInt(0.3f), toInt(0.3f));
-	}
+	
 
 	/* for more interesting lighting: compute normal
 	and cosine of angle between normal and ray direction */
 	float3 hitpoint = camray.origin + camray.dir * t;
 	float3 normal = normalize(hitpoint - sphere1.pos);
-	float cosine_factor = dot(normal, camray.dir) * -1.0f;
+	float cosine_factor = (dot(normal, normalize(hitpoint - light.pos)) * -1.0f) + 0.5f;
 
 	/* for more interesting lighting: compute normal
     	and cosine of angle between normal and ray direction */
     	float3 hitpoint2 = camray.origin + camray.dir * t2;
     	float3 normal2 = normalize(hitpoint2 - sphere2.pos);
-    	float cosine_factor2 = dot(normal2, camray.dir) * -1.0f;
+    	float cosine_factor2 = (dot(normal2, normalize(hitpoint2 - light.pos)) * -1.0f) + 0.5f;
 
     pix[work_item_id] = rgb(toInt((sphere1.color * cosine_factor).x), toInt((sphere1.color * cosine_factor).y), toInt((sphere1.color * cosine_factor).z));
 
