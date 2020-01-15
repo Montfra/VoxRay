@@ -5,7 +5,7 @@
 #ifndef RAY_CORE_H
 #define RAY_CORE_H
 
-#include <OpenCL/opencl.h>
+#include <CL/opencl.h>
 #include <SDL.h>
 #include <iostream>
 
@@ -18,6 +18,7 @@ const int deviceChoice = 1;
 
 // PROGRAM
 cl_mem pix;
+cl_mem model;
 unsigned int* cpu_pix;
 int err; // error catch
 size_t local;
@@ -75,6 +76,7 @@ void initOpenCL(const char *KernelSource) {
 
 void initStaticVariable() {
     pix = clCreateBuffer(context, CL_MEM_WRITE_ONLY, sizeof(CL_UNORM_INT8) * image_width * image_height, NULL, NULL);
+    model = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeof(CL_UNORM_INT8) * image_width * image_height, NULL, NULL);
 
     cpu_pix = (unsigned int*)malloc(image_width * image_height * 4);
 
@@ -82,6 +84,7 @@ void initStaticVariable() {
     clSetKernelArg(kernel, 0, sizeof(int), &image_width);
     clSetKernelArg(kernel, 1, sizeof(int), &image_height);
     clSetKernelArg(kernel, 3, sizeof(cl_mem), &pix);
+    clSetKernelArg(kernel, 4, sizeof(cl_mem), &model);
 
     clGetKernelWorkGroupInfo(kernel, device_id, CL_KERNEL_WORK_GROUP_SIZE, sizeof(local), &local, NULL);
 }
