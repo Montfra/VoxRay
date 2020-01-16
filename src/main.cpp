@@ -35,56 +35,15 @@ void executeProgram() {
 
 int main(int argc, char* argv[]) {
 
-	/*for (int i = 0; i < 1; i++) {
-		tmp = model.point(i);
-		mdl[i].x = tmp.x / 50;
-		mdl[i].y = tmp.y / 50;
-		mdl[i].z = tmp.z / 50;
-	}*/
-	/*int face = 0;
-	for (int i = 0; i < 1; i += 9) {
-		auto p0 = model.point(model.vert(face, 0));
-		auto p1 = model.point(model.vert(face, 1));
-		auto p2 = model.point(model.vert(face, 2));
+	// FRONT
+	mdl[0] = 0.0f;
+	mdl[1] = -0.6f;
+	mdl[2] = 25.0f;
 
-		mdl[i] = p0.x;
-		mdl[i + 1] = p0.y;
-		mdl[i + 2] = p0.z;
-
-		mdl[i + 3] = p0.x;
-		mdl[i + 4] = p0.y;
-		mdl[i + 5] = p0.z;
-
-		mdl[i + 6] = p0.x;
-		mdl[i + 7] = p0.y;
-		mdl[i + 8] = p0.z;
-
-		face++;
-	}*/
-
-	mdl[0] = -0.5f;
-	mdl[1] = 0.3f;
-	mdl[2] = 2.0f;
-
-	mdl[3] = 0.5f;
-	mdl[4] = 0.3f;
-	mdl[5] = 2.0f;
-
-	mdl[6] = -0.5f;
-	mdl[7] = -0.2f;
-	mdl[8] = 2.0f;
-
-	mdl[9] = 0.5f;
-	mdl[10] = 0.3f;
-	mdl[11] = 2.0f;
-		
-	mdl[12] = 0.5f;
-	mdl[13] = -0.2f;
-	mdl[14] = 2.0f;
-		
-	mdl[15] = -0.5f;
-	mdl[16] = -0.2f;
-	mdl[17] = 2.0f;
+	mdl[3] = -0.5f;
+	mdl[4] = 0.0f;
+	mdl[5] = 0.0f;
+	// Normal (0.0f, 1.0f, 0.0f)
 
     // GET PROGRAM
     string source;
