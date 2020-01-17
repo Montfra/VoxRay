@@ -6,3 +6,5 @@ First test
 ![](render/render1.gif)
 Second, cubes rendering
 ![](render/render2.gif)
+First light
+![](render/render3.gif)
