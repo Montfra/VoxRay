@@ -20,7 +20,7 @@ float mdl[image_width * image_height];
 
 
 void executeProgram() {
-	clEnqueueWriteBuffer(commands, model, CL_TRUE, 0, sizeof(float) * image_height * image_width, mdl, 0, NULL, NULL);
+    clEnqueueWriteBuffer(commands, model, CL_TRUE, 0, sizeof(float) * image_height * image_width, mdl, 0, NULL, NULL);
 
     // SET VARIABLE
     clSetKernelArg(kernel, 2, sizeof(int), &sphereSize);
@@ -35,15 +35,15 @@ void executeProgram() {
 
 int main(int argc, char* argv[]) {
 
-	// FRONT
-	mdl[0] = 0.0f;
-	mdl[1] = -0.6f;
-	mdl[2] = 25.0f;
+    // FRONT
+    mdl[0] = 0.0f;
+    mdl[1] = -0.6f;
+    mdl[2] = 25.0f;
 
-	mdl[3] = -0.5f;
-	mdl[4] = 0.0f;
-	mdl[5] = 0.0f;
-	// Normal (0.0f, 1.0f, 0.0f)
+    mdl[3] = -0.5f;
+    mdl[4] = 0.0f;
+    mdl[5] = 0.0f;
+    // Normal (0.0f, 1.0f, 0.0f)
 
     // GET PROGRAM
     string source;
@@ -84,10 +84,10 @@ int main(int argc, char* argv[]) {
 
 
         // CHANGE ANIMATION
-		sphereSize += speed;
+        sphereSize += speed;
         if (sphereSize > 100 || sphereSize < -40) {
             speed *= -1;
-			
+
         }
 
 
@@ -106,6 +106,6 @@ int main(int argc, char* argv[]) {
 
     }
 
-	free(mdl);
+    free(mdl);
     return 0;
 }

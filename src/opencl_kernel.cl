@@ -29,8 +29,6 @@ struct Cube {
 	float3 color;
 };
 
-
-
 bool intersect_triangle(const struct Triangle* t, const struct Ray* r, float* tnear) {
 	float3 edge1 = t->p2 - t->p1;
 	float3 edge2 = t->p3 - t->p1;
@@ -48,7 +46,7 @@ bool intersect_triangle(const struct Triangle* t, const struct Ray* r, float* tn
 	float v = dot(r->dir, qvec);
 	if (v < 0 || u + v > det) return false;
 
-	*tnear = dot(edge2, qvec) * (1. / det);
+	*tnear = dot(edge2, qvec) * (1.0f / det);
 	return *tnear > 1e-5;
 }
 
@@ -60,11 +58,11 @@ bool intersect_cube(const struct Cube* cube, const struct Ray* r, float* t) {
 	float3 rt = (float3)( cube->pos.x + 0.05f,  cube->pos.y, cube->pos.z);
 
 	float3 dirfrac;
-	
+
 	dirfrac.x = 1.0f / r->dir.x;
 	dirfrac.y = 1.0f / r->dir.y;
 	dirfrac.z = 1.0f / r->dir.z;
-	
+
 	float t1 = (lb.x - r->origin.x) * dirfrac.x;
 	float t2 = (rt.x - r->origin.x) * dirfrac.x;
 	float t3 = (lb.y - r->origin.y) * dirfrac.y;
@@ -75,14 +73,14 @@ bool intersect_cube(const struct Cube* cube, const struct Ray* r, float* t) {
 	float tmin = max(max(min(t1, t2), min(t3, t4)), min(t5, t6));
 	float tmax = min(min(max(t1, t2), max(t3, t4)), max(t5, t6));
 
-	
+
 	if (tmax < 0.0f)
 	{
 		*t = tmax;
 		return false;
 	}
 
-	
+
 	if (tmin > tmax)
 	{
 		*t = tmax;
@@ -91,7 +89,7 @@ bool intersect_cube(const struct Cube* cube, const struct Ray* r, float* t) {
 
 
 	*t = tmin;
-	
+
 	return true;
 }
 
@@ -132,18 +130,12 @@ struct Ray createCamRay(const int x_coord, const int y_coord, const int width, c
 	float fy = (float)y_coord / (float)height; /* convert int in range [0 - height] to float in range [0-1] */
 
 	/* calculate aspect ratio */
-	float aspect_ratio = (float)(width) / (float)(height);
+	float aspect_ratio = (float)(width) / (float)(height/2);
 	float fx2 = (fx - 0.5f) * aspect_ratio;
 	float fy2 = fy - 0.5f;
 
 	/* determine position of pixel on screen */
 	float3 pixel_pos = (float3)(fx2, -fy2, 0.0f);
-
-
-
-	float dir_x = (x_coord + 0.5) - width / 2.0f;
-	float dir_y = -(y_coord + 0.5) + height / 2.0f;   
-	float dir_z = -height / (2.0f * tan((3.14/3.0f) / 2.0f));
 
 	/* create camera ray*/
 	struct Ray ray;
@@ -338,7 +330,7 @@ __kernel void render_kernel(int width, int height, int rendermode, __global unsi
 	mdl[107] = 10.0f;
 
 	/* Normal (0.0f, 0.0f, 1.0f) */
-	
+
 	const int work_item_id = get_global_id(0);		/* the unique global id of the work item for the current pixel */
 
 	int x_coord = work_item_id % width;					/* x-coordinate of the pixel */
@@ -377,8 +369,6 @@ __kernel void render_kernel(int width, int height, int rendermode, __global unsi
 
 	float t3 = 1e20;
 
-	float tnear;
-	
 	bool alreadyColored = true;
 
 	for (int i = 0; i < 9; i+=3) {
@@ -394,16 +384,14 @@ __kernel void render_kernel(int width, int height, int rendermode, __global unsi
 			cc.pos = (float3)(model[0], model[1], model[2]);
 		}
 
-		
+
 		cc.color = (float3)(xxx / 10.0f, 0.4f, xxx / 10.0f);
 		setPosition(cc.vertices, cc.pos);
 		cc.vertices = &mdl;
 
-		
-		
 
 
-		for (int i = 0; i < 109; i += 9) {
+		for (int i = 0; i < 108; i += 9) {
 			struct Triangle tr;
 			tr.pos = (float3)(0.0f, 0.0f, 0.0f);
 			tr.color = cc.color;
@@ -411,6 +399,7 @@ __kernel void render_kernel(int width, int height, int rendermode, __global unsi
 			tr.p2 = (float3)(cc.vertices[i + 3], cc.vertices[i + 4], cc.vertices[i + 5]);
 			tr.p3 = (float3)(cc.vertices[i + 6], cc.vertices[i + 7], cc.vertices[i + 8]);
 
+            float tnear;
 
 			if (intersect_triangle(&tr, &camray, &tnear)) {
 
@@ -456,62 +445,20 @@ __kernel void render_kernel(int width, int height, int rendermode, __global unsi
 				pix[work_item_id] = rgb(toInt((tr.color * cosine_factor3 + tr.color * specular).x), toInt((tr.color * cosine_factor3 + tr.color * specular).y), toInt((tr.color * cosine_factor3 + tr.color * specular).z));
 				alreadyColored = false;
 				break;
-				
+
 			}
 		}
 		setPosition(cc.vertices, -cc.pos);
-		
+
 	}
 
 	if (alreadyColored) {
 		pix[work_item_id] = rgb(toInt(0.1f), toInt(0.3f), toInt(0.3f));
 	}
 
-	if (t > 1e19 && rendermode != 1) { return; }
+    if (t > 1e19 && rendermode != 1) { return; }
 
-	/* if ray misses sphere, return background colour
-	background colour is a blue-ish gradient dependent on image height 
-
-		pix[work_item_id] = rgb(toInt(0.1f), toInt(0.3f), toInt(0.3f));
-
-		float x = -1.0f;
-		float y = 0.0f;
-
-		for (size_t i = 0; i < 400; i++)
-		{
-			struct Cube cube;
-			x += 0.06f;
-			
-
-			if (x >= 1.0f)
-			{
-				x = -1.0f;
-				y -= 0.1f;
-			}
-
-			cube.pos = (float3)(x, y, 0.3f);
-			cube.color = (float3)(x, 0.4f, 0.8f);
-
-			if (intersect_cube(&cube, &camray, &t3))
-			{
-				float3 hitpoint3 = camray.origin + camray.dir * t3;
-				float3 normal3 = normalize(hitpoint3 - cube.pos);
-				normal3.z = normal3.z * -1.0f;
-				
-				float cosine_factor3 = (dot(normal3, normalize(hitpoint3 - light.pos)) * -1.0f) + 0.5f;
-				pix[work_item_id] = rgb(toInt((cube.color * cosine_factor3).x), toInt((cube.color * cosine_factor3).y), toInt((cube.color * cosine_factor3).z));
-				return;
-			}
-		}
-
-		return;
-	*/
-
-	
-
-	/* for more interesting lighting: compute normal
-	and cosine of angle between normal and ray direction */
-	float3 hitpoint = camray.origin + camray.dir * t;
+    float3 hitpoint = camray.origin + camray.dir * t;
 	float3 normal = normalize(hitpoint - sphere1.pos);
 	float cosine_factor = (dot(normal, normalize(hitpoint - light.pos)) * -1.0f) + 0.5f;
 
@@ -523,11 +470,5 @@ __kernel void render_kernel(int width, int height, int rendermode, __global unsi
 
     pix[work_item_id] = rgb(toInt((sphere1.color * cosine_factor).x), toInt((sphere1.color * cosine_factor).y), toInt((sphere1.color * cosine_factor).z));
 
-	/*
-	if (rendermode == 1) pix[work_item_id] = rgb(toInt(((float3)(fx, fy, 0)).x), toInt(((float3)(fx, fy, 0)).y), toInt(((float3)(fx, fy, 0)).z));
-	if (t <= 1e19 && rendermode == 2) pix[work_item_id] = rgb(toInt((sphere1.color).x), toInt((sphere1.color).y), toInt((sphere1.color).z));
-	if (t2 <= 1e19 && rendermode == 2) pix[work_item_id] = rgb(toInt((sphere2.color).x), toInt((sphere2.color).y), toInt((sphere2.color).z));
-	if (t <= 1e19 && rendermode == 3) pix[work_item_id] = rgb(toInt((sphere1.color * cosine_factor).x), toInt((sphere1.color * cosine_factor).y), toInt((sphere1.color * cosine_factor).z));
-	if (t2 <= 1e19 && rendermode == 3) pix[work_item_id] = rgb(toInt((sphere2.color * cosine_factor2).x), toInt((sphere2.color * cosine_factor2).y), toInt((sphere2.color * cosine_factor2).z));
-	 */
+
 }
