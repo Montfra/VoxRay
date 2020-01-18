@@ -52,45 +52,83 @@ bool intersect_triangle(const struct Triangle* t, const struct Ray* r, float* tn
 
 
 
-bool intersect_cube(const struct Cube* cube, const struct Ray* r, float* t) {
+bool intersect_cube(const struct Cube* cube, const struct Ray* r, float3* normal, float* t) {
+	cube->pos.x -= 0.5f;
+	cube->pos.y -= 0.25f;
+	
+	/* Front */
+	/* Compute intersection point */
+	float d = -(r->origin.z - cube->pos.z) / r->dir.z;
+	float3 pt = r->origin + r->dir * d;
 
-	float3 lb = (float3)( cube->pos.x, cube->pos.y -0.05f, cube->pos.z -0.8f);
-	float3 rt = (float3)( cube->pos.x + 0.05f,  cube->pos.y, cube->pos.z);
-
-	float3 dirfrac;
-
-	dirfrac.x = 1.0f / r->dir.x;
-	dirfrac.y = 1.0f / r->dir.y;
-	dirfrac.z = 1.0f / r->dir.z;
-
-	float t1 = (lb.x - r->origin.x) * dirfrac.x;
-	float t2 = (rt.x - r->origin.x) * dirfrac.x;
-	float t3 = (lb.y - r->origin.y) * dirfrac.y;
-	float t4 = (rt.y - r->origin.y) * dirfrac.y;
-	float t5 = (lb.z - r->origin.z) * dirfrac.z;
-	float t6 = (rt.z - r->origin.z) * dirfrac.z;
-
-	float tmin = max(max(min(t1, t2), min(t3, t4)), min(t5, t6));
-	float tmax = min(min(max(t1, t2), max(t3, t4)), max(t5, t6));
-
-
-	if (tmax < 0.0f)
-	{
-		*t = tmax;
-		return false;
+	if (pt.x > cube->pos.x && pt.x < cube->pos.x + 1.0f && pt.y > cube->pos.y && pt.y < cube->pos.y + 0.5f) {
+		/* Normal for Bottom */
+		*normal = (float3)(0.0f, 0.0f, -1.0f);
+		*t = d;
+		return true;
 	}
 
+	/* Top */
+	/* Compute intersection point */
+	d = -(r->origin.y - (cube->pos.y + 0.5f)) / r->dir.y;
+	pt = r->origin + r->dir * d;
 
-	if (tmin > tmax)
-	{
-		*t = tmax;
-		return false;
+	if (pt.x > cube->pos.x && pt.x < cube->pos.x + 1.0f && pt.z > cube->pos.z && pt.z < cube->pos.z + 40.0f) {
+		/* Normal for Bottom */
+		*normal = (float3)(0.0f, 1.0f, 0.0f);
+		*t = d;
+		return true;
 	}
 
+	/* Left */
+	/* Compute intersection point */
+	d = -(r->origin.x - cube->pos.x) / r->dir.x;
+	pt = r->origin + r->dir * d;
 
-	*t = tmin;
+	if (pt.y > cube->pos.y && pt.y < cube->pos.y + 0.5f && pt.z > cube->pos.z && pt.z < cube->pos.z + 40.0f) {
+		/* Normal for Bottom */
+		*normal = (float3)(-1.0f, 0.0f, 0.0f);
+		*t = d;
+		return true;
+	}
 
-	return true;
+	/* Right */
+	/* Compute intersection point */
+	d = -(r->origin.x - (cube->pos.x + 1.0f)) / r->dir.x;
+	pt = r->origin + r->dir * d;
+
+	if (pt.y > cube->pos.y && pt.y < cube->pos.y + 0.5f && pt.z > cube->pos.z && pt.z < cube->pos.z + 40.0f) {
+		/* Normal for Bottom */
+		*normal = (float3)(1.0f, 0.0f, 0.0f);
+		*t = d;
+		return true;
+	}
+
+	/* Bottom */
+	/* Compute intersection point */
+	d = -(r->origin.y - cube->pos.y) / r->dir.y;
+	pt = r->origin + r->dir * d;
+
+	if (pt.x > cube->pos.x && pt.x < cube->pos.x + 1.0f && pt.z > cube->pos.z && pt.z < cube->pos.z + 40.0f) {
+		/* Normal for Bottom */
+		*normal = (float3)(0.0f, -1.0f, 0.0f);
+		*t = d;
+		return true;
+	}
+
+	/* Back */
+	/* Compute intersection point */
+	d = -(r->origin.z - (cube->pos.z+ 40.0f)) / r->dir.z;
+	pt = r->origin + r->dir * d;
+
+	if (pt.x > cube->pos.x && pt.x < cube->pos.x + 1.0f && pt.y > cube->pos.y && pt.y < cube->pos.y + 0.5f) {
+		/* Normal for Bottom */
+		*normal = (float3)(0.0f, 0.0f, -1.0f);
+		*t = d;
+		return true;
+	}
+
+	return false;
 }
 
 bool intersect_sphere(const struct Sphere* sphere, const struct Ray* ray, float* t)
@@ -344,12 +382,12 @@ __kernel void render_kernel(int width, int height, int rendermode, __global unsi
 	struct Ray camray = createCamRay(x_coord, y_coord, width, height);
 
 	struct Light light;
-	light.pos = (float3)(xxx, 0.2f, 30.0f);
+	light.pos = (float3)(xxx, 2.5f, 0.0f);
 
 	/* create and initialise a sphere */
 	struct Sphere sphere1;
 	sphere1.radius = 0.09f;
-	sphere1.pos = (float3)(xxx, 0.2f, 31.0f);
+	sphere1.pos = (float3)(xxx, 0.5f, 0.0f);
 	sphere1.color = (float3)((400 - xxx)/400, 0.6f, xxx/400);
 
 	/* create and initialise a sphere2 */
@@ -371,27 +409,36 @@ __kernel void render_kernel(int width, int height, int rendermode, __global unsi
 
 	bool alreadyColored = true;
 
-	for (int i = 0; i < 9; i+=3) {
+	for (int i = 0; i < 10; i+=3) {
 
 		struct Cube cc;
 
 		if (i < 4)
 		{
-			cc.pos = (float3)(xxx/10.0f, xxx / 10.0f, 300.0f);
+			cc.pos = (float3)(0.9f, -0.3f, 1.0f);
 		}
 		else
 		{
 			cc.pos = (float3)(model[0], model[1], model[2]);
 		}
 
-
-		cc.color = (float3)(xxx / 10.0f, 0.4f, xxx / 10.0f);
+		cc.color = (float3)(0.3f, 0.2f, 0.5f);
 		setPosition(cc.vertices, cc.pos);
 		cc.vertices = &mdl;
 
+		float tnear;
+		float3 normal;
+
+		if (intersect_cube(&cc, &camray, &normal, &tnear))
+		{
+			float3 hitpoint3 = camray.origin + camray.dir * tnear;
+			float cosine_factor3 = (dot(normal, normalize(hitpoint3 - light.pos)) * -3.0f) ;
+			pix[work_item_id] = rgb(toInt((cc.color * cosine_factor3).x), toInt((cc.color * cosine_factor3).y), toInt((cc.color * cosine_factor3).z));
+			alreadyColored = false;
+		}
 
 
-		for (int i = 0; i < 108; i += 9) {
+		/*for (int i = 0; i < 108; i += 9) {
 			struct Triangle tr;
 			tr.pos = (float3)(0.0f, 0.0f, 0.0f);
 			tr.color = cc.color;
@@ -447,7 +494,7 @@ __kernel void render_kernel(int width, int height, int rendermode, __global unsi
 				break;
 
 			}
-		}
+		}*/
 		setPosition(cc.vertices, -cc.pos);
 
 	}
