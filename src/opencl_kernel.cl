@@ -123,7 +123,7 @@ bool intersect_cube(const struct Cube* cube, const struct Ray* r, float3* normal
 
 	if (pt.x > cube->pos.x && pt.x < cube->pos.x + 1.0f && pt.y > cube->pos.y && pt.y < cube->pos.y + 0.5f) {
 		/* Normal for Bottom */
-		*normal = (float3)(0.0f, 0.0f, -1.0f);
+		*normal = (float3)(0.0f, 0.0f, 1.0f);
 		*t = d;
 		return true;
 	}
@@ -197,6 +197,10 @@ void setPosition(float* model, float3 position) {
 		model[i + 7] += position.y;
 		model[i + 8] += position.z;
 	}
+}
+
+float3 reflect(float3 I, float3 N) {
+	return I - dot(dot(N, 2.f), dot(I, N));
 }
 
 __kernel void render_kernel(int width, int height, int rendermode, __global unsigned int* pix, __global float* model)
@@ -382,12 +386,12 @@ __kernel void render_kernel(int width, int height, int rendermode, __global unsi
 	struct Ray camray = createCamRay(x_coord, y_coord, width, height);
 
 	struct Light light;
-	light.pos = (float3)(xxx, 2.5f, 0.0f);
+	light.pos = (float3)(xxx, 1.0, -1.0);
 
 	/* create and initialise a sphere */
 	struct Sphere sphere1;
 	sphere1.radius = 0.09f;
-	sphere1.pos = (float3)(xxx, 0.5f, 0.0f);
+	sphere1.pos = (float3)(xxx, 0.0f, xxx);
 	sphere1.color = (float3)((400 - xxx)/400, 0.6f, xxx/400);
 
 	/* create and initialise a sphere2 */
@@ -415,11 +419,12 @@ __kernel void render_kernel(int width, int height, int rendermode, __global unsi
 
 		if (i < 4)
 		{
-			cc.pos = (float3)(0.9f, -0.3f, 1.0f);
+			cc.pos = (float3)(0.0f, -0.5f, 1.0f);
 		}
 		else
 		{
 			cc.pos = (float3)(model[0], model[1], model[2]);
+			cc.pos = (float3)(0.9f, -0.3f, -100000000.0f);
 		}
 
 		cc.color = (float3)(0.3f, 0.2f, 0.5f);
@@ -431,10 +436,23 @@ __kernel void render_kernel(int width, int height, int rendermode, __global unsi
 
 		if (intersect_cube(&cc, &camray, &normal, &tnear))
 		{
-			float3 hitpoint3 = camray.origin + camray.dir * tnear;
-			float cosine_factor3 = (dot(normal, normalize(hitpoint3 - light.pos)) * -3.0f) ;
-			pix[work_item_id] = rgb(toInt((cc.color * cosine_factor3).x), toInt((cc.color * cosine_factor3).y), toInt((cc.color * cosine_factor3).z));
 			alreadyColored = false;
+
+			float3 hitpoint3 = camray.origin + camray.dir * tnear;
+
+			/* DIFFUSE */
+			float dcom = dot(normalize(hitpoint3 - light.pos), normal);
+			
+			float dif = -3.0f * dcom;
+			
+			/* SPECULAR */
+			float com = dot(-reflect(-normalize(hitpoint3 - light.pos), normal), camray.dir);
+			
+			float spec = pow(com, 2.0f) * 2.0f;
+			
+			/* float spec = pow(dot(-reflect(-normalize(hitpoint3 - light.pos), normal), normalize(hitpoint3 - light.pos))), 2.0f) * 3.0f; */
+			
+			pix[work_item_id] = rgb(toInt((cc.color * dif * spec).x), toInt((cc.color * dif * spec).y), toInt((cc.color * dif * spec).z));
 		}
 
 
@@ -500,7 +518,29 @@ __kernel void render_kernel(int width, int height, int rendermode, __global unsi
 	}
 
 	if (alreadyColored) {
-		pix[work_item_id] = rgb(toInt(0.1f), toInt(0.3f), toInt(0.3f));
+
+		uint seed = work_item_id;
+		seed = (seed * 0x5DEECE66DL + 0xBL) & ((1L << 48) - 1);
+		uint result = seed >> 16;
+
+		seed = (result * 0x5DEECE66DL + 0xBL) & ((1L << 48) - 1);
+		result = seed >> 16;
+
+		seed = (result * 0x5DEECE66DL + 0xBL) & ((1L << 48) - 1);
+		result = seed >> 16;
+
+		seed = (result * 0x5DEECE66DL + 0xBL) & ((1L << 48) - 1);
+		result = seed >> 16;
+
+
+		pix[work_item_id] = rgb(toInt(0.1f), toInt(0.1f), toInt(0.1f));
+
+		if (result % 8000 <= 1)
+		{
+			pix[work_item_id] = rgb(toInt(result), toInt(1/result), toInt(result));
+		}
+		
+		
 	}
 
     if (t > 1e19 && rendermode != 1) { return; }

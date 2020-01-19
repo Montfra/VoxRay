@@ -65,11 +65,14 @@ int main(int argc, char* argv[]) {
     initLibs(kernelSource);
 
 
+	SDL_Surface* image = SDL_LoadBMP("background.bmp");
+	SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, image);
+	SDL_Rect dstrect = { 5, 5, 320, 240 };
+
     // MAIN LOOP
     while (1)
     {
         auto start = high_resolution_clock::now(); // To compute frameRate
-
 
         // Catch exit
         eventCatch();
@@ -78,10 +81,14 @@ int main(int argc, char* argv[]) {
         // EXECUTE PROGRAM
         executeProgram();
 
-
         // PRINT TO SCREEN
-        printToScreen();
-
+		//printToScreen();
+		SDL_RenderClear(renderer);
+		SDL_UpdateTexture(screen_texture, NULL, cpu_pix, image_width * 4);
+		SDL_RenderCopy(renderer, screen_texture, NULL, NULL);
+		
+		SDL_RenderCopy(renderer, texture, NULL, &dstrect);
+		SDL_RenderPresent(renderer);
 
         // CHANGE ANIMATION
         sphereSize += speed;
