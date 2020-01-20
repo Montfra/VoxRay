@@ -382,11 +382,16 @@ __kernel void render_kernel(int width, int height, int rendermode, __global unsi
 	float fy = (float)y_coord / (float)height; /* convert int in range [0 - height] to float in range [0-1] */
 
 	float xxx = (((float)rendermode) / 10.0f);
+
+	if (xxx < 0.0f)
+	{
+		xxx = 0.0f;
+	}
 	/*create a camera ray */
 	struct Ray camray = createCamRay(x_coord, y_coord, width, height);
 
 	struct Light light;
-	light.pos = (float3)(xxx, 1.0, -1.0);
+	light.pos = (float3)(0.0f, 0.0f, 0.0f);
 
 	/* create and initialise a sphere */
 	struct Sphere sphere1;
@@ -413,21 +418,26 @@ __kernel void render_kernel(int width, int height, int rendermode, __global unsi
 
 	bool alreadyColored = true;
 
-	for (int i = 0; i < 10; i+=3) {
+	for (int i = 0; i < 54; i+=3) {
 
 		struct Cube cc;
 
 		if (i < 4)
 		{
-			cc.pos = (float3)(0.0f, -0.5f, 1.0f);
+			cc.pos = (float3)(-0.0f, -0.5f, xxx*20);
+			cc.pos = (float3)(model[i], model[i+1], model[i+2]);
 		}
 		else
 		{
 			cc.pos = (float3)(model[0], model[1], model[2]);
-			cc.pos = (float3)(0.9f, -0.3f, -100000000.0f);
+			cc.pos = (float3)(1.0f, -0.0f, xxx*20);
+			cc.pos = (float3)(model[i], model[i+1], model[i+2]);
 		}
 
-		cc.color = (float3)(0.3f, 0.2f, 0.5f);
+		float red = model[i+2] / 2000.0f;
+		
+		
+		cc.color = (float3)(0.5f * red, 0.5f * red, 0.9f * red);
 		setPosition(cc.vertices, cc.pos);
 		cc.vertices = &mdl;
 
@@ -447,12 +457,15 @@ __kernel void render_kernel(int width, int height, int rendermode, __global unsi
 			
 			/* SPECULAR */
 			float com = dot(-reflect(-normalize(hitpoint3 - light.pos), normal), camray.dir);
-			
-			float spec = pow(com, 2.0f) * 2.0f;
+			float spec = pow(com, 2.0f) * 1.0f;
 			
 			/* float spec = pow(dot(-reflect(-normalize(hitpoint3 - light.pos), normal), normalize(hitpoint3 - light.pos))), 2.0f) * 3.0f; */
-			
-			pix[work_item_id] = rgb(toInt((cc.color * dif * spec).x), toInt((cc.color * dif * spec).y), toInt((cc.color * dif * spec).z));
+
+			if (pix[work_item_id] < rgb(toInt((cc.color * dif * spec).x), toInt((cc.color * dif * spec).y), toInt((cc.color * dif * spec).z)))
+			{
+				pix[work_item_id] = rgb(toInt((cc.color * dif * spec).x), toInt((cc.color * dif * spec).y), toInt((cc.color * dif * spec).z));
+			}
+			/*pix[work_item_id] = rgb(toInt((cc.color * dif * spec).x), toInt((cc.color * dif * spec).y), toInt((cc.color * dif * spec).z)); */
 		}
 
 
@@ -533,29 +546,29 @@ __kernel void render_kernel(int width, int height, int rendermode, __global unsi
 		result = seed >> 16;
 
 
-		pix[work_item_id] = rgb(toInt(0.1f), toInt(0.1f), toInt(0.1f));
+		pix[work_item_id] = rgb(toInt(0.07f), toInt(0.07f), toInt(0.07f));
 
 		if (result % 8000 <= 1)
 		{
-			pix[work_item_id] = rgb(toInt(result), toInt(1/result), toInt(result));
+			pix[work_item_id] = rgb(toInt(result + 0.2f), toInt(1/result + 0.2f), toInt(result + 0.2f));
 		}
 		
 		
 	}
 
-    if (t > 1e19 && rendermode != 1) { return; }
+    /*if (t > 1e19 && rendermode != 1) { return; }
 
     float3 hitpoint = camray.origin + camray.dir * t;
 	float3 normal = normalize(hitpoint - sphere1.pos);
 	float cosine_factor = (dot(normal, normalize(hitpoint - light.pos)) * -1.0f) + 0.5f;
 
 	/* for more interesting lighting: compute normal
-    	and cosine of angle between normal and ray direction */
+    	and cosine of angle between normal and ray direction 
     	float3 hitpoint2 = camray.origin + camray.dir * t2;
     	float3 normal2 = normalize(hitpoint2 - sphere2.pos);
     	float cosine_factor2 = (dot(normal2, normalize(hitpoint2 - light.pos)) * -1.0f) + 0.5f;
 
-    pix[work_item_id] = rgb(toInt((sphere1.color * cosine_factor).x), toInt((sphere1.color * cosine_factor).y), toInt((sphere1.color * cosine_factor).z));
+    pix[work_item_id] = rgb(toInt((sphere1.color * cosine_factor).x), toInt((sphere1.color * cosine_factor).y), toInt((sphere1.color * cosine_factor).z));*/
 
 
 }

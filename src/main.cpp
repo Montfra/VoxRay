@@ -13,8 +13,8 @@ using namespace std;
 // CONSTANT
 const string programPath = "opencl_kernel.cl";
 
-int sphereSize = 100; // sphere size
-int speed = -1; // speed of animation
+float sphereSize = 100; // sphere size
+float speed = -0.5; // speed of animation
 
 float mdl[image_width * image_height];
 
@@ -34,16 +34,6 @@ void executeProgram() {
 }
 
 int main(int argc, char* argv[]) {
-
-    // FRONT
-    mdl[0] = 0.0f;
-    mdl[1] = -0.6f;
-    mdl[2] = 25.0f;
-
-    mdl[3] = -0.5f;
-    mdl[4] = 0.0f;
-    mdl[5] = 0.0f;
-    // Normal (0.0f, 1.0f, 0.0f)
 
     // GET PROGRAM
     string source;
@@ -69,9 +59,191 @@ int main(int argc, char* argv[]) {
 	SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, image);
 	SDL_Rect dstrect = { 5, 5, 320, 240 };
 
+	int alea1 = rand() % 3;
+	int alea2 = rand() % 3;
+	int alea3 = rand() % 3;
+	int alea4 = rand() % 3;
+	int alea5 = rand() % 3;
+	int alea6 = rand() % 3;
+
+	int random = 0;
+	int correct1 = 18;
+	int correct2 = 36;
+
+	float middle = 0.0f;
+	float left = -4.0f;
+	float right = 4.0f;
+
+	if (alea1 == 0)
+	{
+		middle = 0.0f;
+		left = -4.0f;
+		right = 4.0f;
+	}
+	else if (alea1 == 1)
+	{
+		middle = -4.0f;
+		left = 0.0f;
+		right = 4.0f;
+	}
+	else {
+		middle = 4.0f;
+		left = -4.0f;
+		right = 0.0f;
+	}
+
     // MAIN LOOP
     while (1)
     {
+		// MIDDLE
+		mdl[random] = middle;
+		mdl[random + 1] = -0.5f;
+		mdl[random + 2] = sphereSize * 20.0f;
+		if (alea1 == 0)
+		{
+			mdl[random + 2] = -10000000.0f;
+		}
+
+		mdl[random + 3] = middle + 1.0f;
+		mdl[random + 4] = 0.0f;
+		mdl[random + 5] = sphereSize * 20;
+		if (alea2 == 0)
+		{
+			mdl[random + 5] = -10000000.0f;
+		}
+
+		mdl[random + 6] = middle - 1.0f;
+		mdl[random + 7] = 0.0f;
+		mdl[random + 8] = sphereSize * 20;
+		if (alea3 == 0)
+		{
+			mdl[random + 8] = -10000000.0f;
+		}
+
+		mdl[random + 9] = middle;
+		mdl[random + 10] = 0.0f;
+		mdl[random + 11] = sphereSize * 20;
+		if (alea4 == 0)
+		{
+			mdl[random + 11] = -10000000.0f;
+		}
+
+		mdl[random + 12] = middle + 1.0f;
+		mdl[random + 13] = -0.5f;
+		mdl[random + 14] = sphereSize * 20;
+		if (alea5 == 0)
+		{
+			mdl[random + 14] = -10000000.0f;
+		}
+
+		mdl[random + 15] = middle - 1.0f;
+		mdl[random + 16] = -0.5f;
+		mdl[random + 17] = sphereSize * 20;
+		if (alea6== 0)
+		{
+			mdl[random + 17] = -10000000.0f;
+		}
+
+		// RIGHT
+		mdl[correct1] = right;
+		mdl[correct1 + 1] = -0.5f;
+		mdl[correct1 + 2] = sphereSize * 20.0f;
+		if (alea1 == 1)
+		{
+			mdl[correct1 + 2] = -10000000.0f;
+		}
+
+		mdl[correct1 + 3] = right + 1.0f;
+		mdl[correct1 + 4] = 0.0f;
+		mdl[correct1 + 5] = sphereSize * 20;
+		if (alea2 == 1)
+		{
+			mdl[correct1 + 5] = -10000000.0f;
+		}
+
+		mdl[correct1 + 6] = right - 1.0f;
+		mdl[correct1 + 7] = 0.0f;
+		mdl[correct1 + 8] = sphereSize * 20;
+		if (alea3 == 1)
+		{
+			mdl[correct1 + 8] = -10000000.0f;
+		}
+
+		mdl[correct1 + 9] = right;
+		mdl[correct1 + 10] = 0.0f;
+		mdl[correct1 + 11] = sphereSize * 20;
+		if (alea4 == 1)
+		{
+			mdl[correct1 + 11] = -10000000.0f;
+		}
+
+		mdl[correct1 + 12] = right + 1.0f;
+		mdl[correct1 + 13] = -0.5f;
+		mdl[correct1 + 14] = sphereSize * 20;
+		if (alea5 == 1)
+		{
+			mdl[correct1 + 14] = -10000000.0f;
+		}
+
+		mdl[correct1 + 15] = right - 1.0f;
+		mdl[correct1 + 16] = -0.5f;
+		mdl[correct1 + 17] = sphereSize * 20;
+		if (alea6 == 1)
+		{
+			mdl[correct1 + 17] = -10000000.0f;
+		}
+
+		// LEFT
+		mdl[correct2] = left;
+		mdl[correct2 + 1] = -0.5f;
+		mdl[correct2 + 2] = sphereSize * 20.0f;
+		if (alea1 != 1)
+		{
+			mdl[correct2 + 2] = -10000000.0f;
+		}
+
+		mdl[correct2 + 3] = left + 1.0f;
+		mdl[correct2 + 4] = 0.0f;
+		mdl[correct2 + 5] = sphereSize * 20;
+		if (alea2 != 1)
+		{
+			mdl[correct2 + 5] = -10000000.0f;
+		}
+
+		mdl[correct2 + 6] = left - 1.0f;
+		mdl[correct2 + 7] = 0.0f;
+		mdl[correct2 + 8] = sphereSize * 20;
+		if (alea3 != 1)
+		{
+			mdl[correct2 + 8] = -10000000.0f;
+		}
+
+		mdl[correct2 + 9] = left;
+		mdl[correct2 + 10] = 0.0f;
+		mdl[correct2 + 11] = sphereSize * 20;
+		if (alea4 != 1)
+		{
+			mdl[correct2 + 11] = -10000000.0f;
+		}
+
+		mdl[correct2 + 12] = left + 1.0f;
+		mdl[correct2 + 13] = -0.5f;
+		mdl[correct2 + 14] = sphereSize * 20;
+		if (alea5 != 1)
+		{
+			mdl[correct2 + 14] = -10000000.0f;
+		}
+
+		mdl[correct2 + 15] = left - 1.0f;
+		mdl[correct2 + 16] = -0.5f;
+		mdl[correct2 + 17] = sphereSize * 20;
+		if (alea6 != 1)
+		{
+			mdl[correct2 + 17] = -10000000.0f;
+		}
+
+		
+		// Normal (0.0f, 1.0f, 0.0f)
         auto start = high_resolution_clock::now(); // To compute frameRate
 
         // Catch exit
@@ -92,13 +264,35 @@ int main(int argc, char* argv[]) {
 
         // CHANGE ANIMATION
         sphereSize += speed;
-        if (sphereSize > 100 || sphereSize < -40) {
-            speed *= -1;
+		 // sphereSize = 50.0f;
+		if (sphereSize > 100 || sphereSize < -1) {
+			sphereSize = 100;
+			alea1 = rand() % 3;
+			alea2 = rand() % 3;
+			alea3 = rand() % 3;
+			alea4 = rand() % 3;
+			alea5 = rand() % 3;
+			alea6 = rand() % 3;
 
-        }
-
-
-        // COMPUTE FRAMERATE
+			if (alea1 == 0)
+			{
+				middle = 0.0f;
+				left = -4.0f;
+				right = 4.0f;
+			}
+			else if (alea1 == 1)
+			{
+				middle = -4.0f;
+				left = 0.0f;
+				right = 4.0f;
+			}
+			else {
+				middle = 4.0f;
+				left = -4.0f;
+				right = 0.0f;
+			}
+		}					
+        // Calea6 = rand() % 20;OMPUTE FRAMERATE
         auto stop = high_resolution_clock::now();
         auto duration = duration_cast<milliseconds>(stop - start);
         // cout << duration.count() << endl;
