@@ -5,7 +5,7 @@
 #ifndef RAY_CORE_H
 #define RAY_CORE_H
 
-#include <CL/opencl.h>
+#include <OpenCL/opencl.h>
 #include <SDL.h>
 #include <iostream>
 #include "Menu.h"

@@ -6,7 +6,7 @@ class Image
 private:
 	SDL_Surface* image;
 	SDL_Texture* texture;
-	SDL_Rect dstrect;
+	SDL_Rect* dstrect;
 
 	SDL_Texture* score;
 	SDL_Texture* score1;
@@ -34,7 +34,7 @@ private:
 	
 
 public:
-	Image(SDL_Renderer* render, const char* imagePath, SDL_Rect rect);
+	Image(SDL_Renderer* render, const char* imagePath, SDL_Rect* rect);
 	void print(SDL_Renderer*);
 	void setValue(int);
 };

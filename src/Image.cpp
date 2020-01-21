@@ -1,6 +1,6 @@
-#include "Image.h"
+#include "image.h"
 
-Image::Image(SDL_Renderer* render, const char* imagePath, SDL_Rect rect) :
+Image::Image(SDL_Renderer* render, const char* imagePath, SDL_Rect* rect) :
 	dstrect(rect), isDigit(false)
 {
 	image = SDL_LoadBMP(imagePath);
@@ -13,30 +13,65 @@ Image::Image(SDL_Renderer* render, const char* imagePath, SDL_Rect rect) :
 	score10000 = SDL_CreateTextureFromSurface(render, image);
 	score100000 = SDL_CreateTextureFromSurface(render, image);
 
+    digit.x = 420;
+    digit.y = 0;
+    digit.w = 66;
+    digit.h = 63;
 
-	SDL_Texture* score;
-	SDL_Texture* score1;
-	SDL_Texture* score10;
-	SDL_Texture* score100;
-	SDL_Texture* score1000;
-	SDL_Texture* score10000;
-	SDL_Texture* score100000;
+    dix.x = 530;
+    dix.y = 0;
+    dix.w = 66;
+    dix.h = 63;
 
-	digit = {420, 0, 66, 63};
-	dix = { 530, 0, 66, 63 };
-	cent = { 640, 0, 66, 63 };
-	mille = { 750, 0, 66, 63 };
-	dixMille = { 860, 0, 66, 63 };
-	centMille = { 970, 0, 66, 63 };
+    cent.x = 640;
+    cent.y = 0;
+    cent.w = 66;
+    cent.h = 63;
 
-	d1 = { 420, 0, 66, 63 };
-	d10 = { 530, 0, 66, 63 };
-	d100 = { 640, 0, 66, 63 };
-	d1000 = { 750, 0, 66, 63 };
-	d10000 = { 860, 0, 66, 63 };
-	d100000 = { 970, 0, 66, 63 };
+    mille.x = 750;
+    mille.y = 0;
+    mille.w = 66;
+    mille.h = 63;
 
-	bool isDigit;
+    dixMille.x = 860;
+    dixMille.y = 0;
+    dixMille.w = 66;
+    dixMille.h = 63;
+
+    centMille.x = 970;
+    centMille.y = 0;
+    centMille.w = 66;
+    centMille.h = 63;
+
+    d1.x = 420;
+    d1.y = 0;
+    d1.w = 66;
+    d1.h = 63;
+
+    d10.x = 530;
+    d10.y = 0;
+    d10.w = 66;
+    d10.h = 63;
+
+    d100.x = 640;
+    d100.y = 0;
+    d100.w = 66;
+    d100.h = 63;
+
+    d1000.x = 750;
+    d1000.y = 0;
+    d1000.w = 66;
+    d1000.h = 63;
+
+    d10000.x = 860;
+    d10000.y = 0;
+    d10000.w = 66;
+    d10000.h = 63;
+
+    d100000.x = 970;
+    d100000.y = 0;
+    d100000.w = 66;
+    d100000.h = 63;
 }
 
 
@@ -54,7 +89,7 @@ void Image::print(SDL_Renderer* renderer) {
 		SDL_RenderCopy(renderer, score100000, &centMille, &d100000);
 	}
 	else {
-		SDL_RenderCopy(renderer, texture, NULL, &dstrect);
+		SDL_RenderCopy(renderer, texture, NULL, dstrect);
 	}
 }
 
@@ -62,56 +97,92 @@ void Image::setValue(int val) {
 	isDigit = true;
 	int decal = 0;
 	if (val / 100000 == 0) {
-		digit = { 170, 0, 66, 63 };
+        digit.x = 170;
+        digit.y = 0;
+        digit.w = 66;
+        digit.h = 63;
 	}
 	else {
 		decal = ((val / 100000) - 1) * 110 + 420;
-		digit = { decal, 0, 66, 63 };
+        digit.x = decal;
+        digit.y = 0;
+        digit.w = 66;
+        digit.h = 63;
 		val = val - 100000 * (val / 100000);
 	}
 
 	if (val / 10000 == 0) {
-		dix = { 170, 0, 66, 63 };
+        dix.x = 170;
+        dix.y = 0;
+        dix.w = 66;
+        dix.h = 63;
 	}
 	else {
 		decal = ((val / 10000) - 1) * 110 + 420;
-		dix = { decal, 0, 66, 63 };
+        dix.x = decal;
+        dix.y = 0;
+        dix.w = 66;
+        dix.h = 63;
 		val = val - 10000 * (val / 10000);
 	}
 
 	if (val / 1000 == 0) {
-		cent = { 170, 0, 66, 63 };
+        cent.x = 170;
+        cent.y = 0;
+        cent.w = 66;
+        cent.h = 63;
 	}
 	else {
 		decal = ((val / 1000) - 1) * 110 + 420;
-		cent = { decal, 0, 66, 63 };
+        cent.x = decal;
+        cent.y = 0;
+        cent.w = 66;
+        cent.h = 63;
 		val = val - 1000 * (val / 1000);
 	}
 
 	if (val / 100 == 0) {
-		mille = { 170, 0, 66, 63 };
+        mille.x = 170;
+        mille.y = 0;
+        mille.w = 66;
+        mille.h = 63;
 	}
 	else {
 		decal = ((val / 100) - 1) * 110 + 420;
-		mille = { decal, 0, 66, 63 };
+        mille.x = decal;
+        mille.y = 0;
+        mille.w = 66;
+        mille.h = 63;
 		val = val - 100 * (val / 100);
 	}
 
 	if (val / 10 == 0) {
-		dixMille = { 170, 0, 66, 63 };
+        dixMille.x = 170;
+        dixMille.y = 0;
+        dixMille.w = 66;
+        dixMille.h = 63;
 	}
 	else {
 		decal = ((val / 10) - 1) * 110 + 420;
-		dixMille = { decal, 0, 66, 63 };
+        dixMille.x = decal;
+        dixMille.y = 0;
+        dixMille.w = 66;
+        dixMille.h = 63;
 		val = val - 10 * (val / 10);
 	}
 
 	if (val / 1 == 0) {
-		centMille = { 170, 0, 66, 63 };
+        centMille.x = 170;
+        centMille.y = 0;
+        centMille.w = 66;
+        centMille.h = 63;
 	}
 	else {
 		decal = ((val / 1) - 1)  * 110 + 420;
-		centMille = {decal, 0, 66, 63};
+        centMille.x = decal;
+        centMille.y = 0;
+        centMille.w = 66;
+        centMille.h = 63;
 	}
 
 }

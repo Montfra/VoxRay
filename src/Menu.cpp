@@ -1,6 +1,6 @@
 #include "Menu.h"
 
-Menu::Menu(SDL_Renderer* renderer) : playButton(renderer, "playButton.bmp", { 1280 / 2 - 300 / 2, 100 / 2 + 400, 300, 100 }), title(renderer, "voxRayLogo.bmp", { 1280 / 2 - 640 / 2, 20, 640, 240 }), isActive(true) {}
+Menu::Menu(SDL_Renderer* renderer) : playButton(renderer, "playButton.bmp", &r1), title(renderer, "voxRayLogo.bmp", &r2), isActive(true) {}
 
 bool Menu::getActive() { return isActive; }
 

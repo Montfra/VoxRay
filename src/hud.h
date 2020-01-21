@@ -14,6 +14,10 @@ private:
 	bool ba;
 	bool bz;
 	bool be;
+	SDL_Rect r1 = { 0, 0, 320, 240 };
+	SDL_Rect ra = { (1280 / 2) - 129, 720 - 60, 129, 60 };
+	SDL_Rect rz  = { (1280 / 2) - 129 / 2, 720 - 60, 129, 60 };
+	SDL_Rect re = { (1280 / 2), 720 - 60, 129, 60 };
 
 public:
 	hud(SDL_Renderer*);
