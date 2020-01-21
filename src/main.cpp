@@ -16,6 +16,7 @@ const string programPath = "opencl_kernel.cl";
 
 float sphereSize = 100; // sphere size
 float speed = -0.5; // speed of animation
+int score = 0;
 
 float mdl[image_width * image_height];
 
@@ -55,6 +56,7 @@ int main(int argc, char* argv[]) {
     // INIT LIBRARIES
     initLibs(kernelSource);
 
+	SDL_SetRenderDrawColor(renderer, 44, 62, 80, 255);
 
 	hud hud(renderer);
 	Menu menu(renderer);
@@ -250,8 +252,7 @@ int main(int argc, char* argv[]) {
         auto start = high_resolution_clock::now(); // To compute frameRate
 
         // Catch exit
-        eventCatch(menu);
-
+        eventCatch(menu, hud, middle, left, right, score);
 
         // EXECUTE PROGRAM
         executeProgram();
@@ -262,6 +263,7 @@ int main(int argc, char* argv[]) {
 
 		if (menu.getActive())
 		{
+			SDL_RenderFillRect(renderer, NULL);
 			menu.print(renderer);
 		}
 		else
@@ -283,6 +285,7 @@ int main(int argc, char* argv[]) {
         
 		 // sphereSize = 50.0f;
 		if (sphereSize > 100 || sphereSize < -1) {
+			speed -= 0.05;
 			sphereSize = 100;
 			alea1 = rand() % 3;
 			alea2 = rand() % 3;

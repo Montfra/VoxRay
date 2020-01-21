@@ -9,13 +9,12 @@
 #include <SDL.h>
 #include <iostream>
 #include "Menu.h"
+#include "hud.h"
 
 // CONSTANT
 const int image_width = 1280;
 const int image_height = 720;
 const int deviceChoice = 1;
-
-
 
 // PROGRAM
 cl_mem pix;
@@ -143,7 +142,11 @@ void cleanAll() {
     clReleaseContext(context);
 }
 
-void eventCatch(Menu& menu) {
+void eventCatch(Menu& menu, hud& hud, float& middle, float& left, float& right, int& score) {
+	bool a = false;
+	bool z = false;
+	bool e = false;
+
     while (SDL_PollEvent(&event))
     {
         if (event.type == SDL_QUIT) {
@@ -154,6 +157,42 @@ void eventCatch(Menu& menu) {
 		{
 			menu.setInactive();
 		}
+		else if (event.type == SDL_KEYDOWN) {
+			if (event.key.keysym.sym == SDLK_a) {
+				a = true;
+				hud.setA();
+			}
+			if (event.key.keysym.sym == SDLK_z) {
+				z = true;
+				hud.setZ();
+			}
+			if (event.key.keysym.sym == SDLK_e) {
+				e = true;
+				hud.setE();
+			}
+		}
+		else if (event.type == SDL_KEYUP) {
+			if (event.key.keysym.sym == SDLK_a) {
+				hud.dsetA();
+			}
+			if (event.key.keysym.sym == SDLK_z) {
+				hud.dsetZ();
+			}
+			if (event.key.keysym.sym == SDLK_e) {
+				hud.dsetE();
+			}
+		}
     }
+
+	if ( middle == 0.0f && a && e && !z) {
+		score++;
+	}
+	if ( left == 0.0f && z && e && !a) {
+		score++;
+	}
+	if ( right == 0.0f && a && z && !e) {
+		score++;
+	}
+	hud.setScore(score);
 }
 #endif //RAY_CORE_H
