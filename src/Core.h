@@ -5,9 +5,10 @@
 #ifndef RAY_CORE_H
 #define RAY_CORE_H
 
-#include <OpenCL/opencl.h>
+#include <CL/opencl.h>
 #include <SDL.h>
 #include <iostream>
+#include "Menu.h"
 
 // CONSTANT
 const int image_width = 1280;
@@ -142,13 +143,17 @@ void cleanAll() {
     clReleaseContext(context);
 }
 
-void eventCatch() {
+void eventCatch(Menu& menu) {
     while (SDL_PollEvent(&event))
     {
         if (event.type == SDL_QUIT) {
             cleanAll();
             exit(0);
         }
+		else if (event.type == SDL_MOUSEBUTTONUP)
+		{
+			menu.setInactive();
+		}
     }
 }
 #endif //RAY_CORE_H

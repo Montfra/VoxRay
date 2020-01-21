@@ -3,6 +3,7 @@
 #include <vector>
 #include <chrono>
 #include "Core.h"
+#include "hud.h"
 
 // For visualStudio
 #pragma warning(disable : 4996)
@@ -55,9 +56,11 @@ int main(int argc, char* argv[]) {
     initLibs(kernelSource);
 
 
-	SDL_Surface* image = SDL_LoadBMP("background.bmp");
+	hud hud(renderer);
+	Menu menu(renderer);
+	/*SDL_Surface* image = SDL_LoadBMP("background.bmp");
 	SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, image);
-	SDL_Rect dstrect = { 5, 5, 320, 240 };
+	SDL_Rect dstrect = { 5, 5, 320, 240 };*/
 
 	int alea1 = rand() % 3;
 	int alea2 = rand() % 3;
@@ -247,7 +250,7 @@ int main(int argc, char* argv[]) {
         auto start = high_resolution_clock::now(); // To compute frameRate
 
         // Catch exit
-        eventCatch();
+        eventCatch(menu);
 
 
         // EXECUTE PROGRAM
@@ -256,14 +259,28 @@ int main(int argc, char* argv[]) {
         // PRINT TO SCREEN
 		//printToScreen();
 		SDL_RenderClear(renderer);
-		SDL_UpdateTexture(screen_texture, NULL, cpu_pix, image_width * 4);
-		SDL_RenderCopy(renderer, screen_texture, NULL, NULL);
-		
-		SDL_RenderCopy(renderer, texture, NULL, &dstrect);
+
+		if (menu.getActive())
+		{
+			menu.print(renderer);
+		}
+		else
+		{
+			SDL_UpdateTexture(screen_texture, NULL, cpu_pix, image_width * 4);
+			SDL_RenderCopy(renderer, screen_texture, NULL, NULL);
+
+			hud.print(renderer);
+
+
+
+			sphereSize += speed;
+
+		}
+
 		SDL_RenderPresent(renderer);
 
         // CHANGE ANIMATION
-        sphereSize += speed;
+        
 		 // sphereSize = 50.0f;
 		if (sphereSize > 100 || sphereSize < -1) {
 			sphereSize = 100;
