@@ -468,64 +468,6 @@ __kernel void render_kernel(int width, int height, int rendermode, __global unsi
 			/*pix[work_item_id] = rgb(toInt((cc.color * dif * spec).x), toInt((cc.color * dif * spec).y), toInt((cc.color * dif * spec).z)); */
 		}
 
-
-		/*for (int i = 0; i < 108; i += 9) {
-			struct Triangle tr;
-			tr.pos = (float3)(0.0f, 0.0f, 0.0f);
-			tr.color = cc.color;
-			tr.p1 = (float3)(cc.vertices[i], cc.vertices[i + 1], cc.vertices[i + 2]);
-			tr.p2 = (float3)(cc.vertices[i + 3], cc.vertices[i + 4], cc.vertices[i + 5]);
-			tr.p3 = (float3)(cc.vertices[i + 6], cc.vertices[i + 7], cc.vertices[i + 8]);
-
-            float tnear;
-
-			if (intersect_triangle(&tr, &camray, &tnear)) {
-
-				float3 normal = (float3)(1.0f, 0.0f, 0.0f);
-				if (i >= 0 && i <= 17)
-				{
-					normal = (float3)(0.0f, 0.0f, -1.0f);
-
-				}
-				else if (i >= 18 && i <= 35)
-				{
-					normal = (float3)(0.0f, 1.0f, 0.0f);
-
-				}
-				else if (i >= 36 && i <= 53)
-				{
-					normal = (float3)(-1.0f, 0.0f, 0.0f);
-
-				}
-				else if (i >= 54 && i <= 71)
-				{
-					normal = (float3)(1.0f, 0.0f, 0.0f);
-
-				}
-				else if (i >= 72 && i <= 89)
-				{
-					normal = (float3)(0.0f, -1.0f, 0.0f);
-
-				}
-				else if (i >= 90 && i <= 107)
-				{
-					normal = (float3)(0.0f, 0.0f, 1.0f);
-
-				}
-
-
-				float3 hitpoint3 = camray.origin + camray.dir * tnear;
-
-				float cosine_factor3 = (dot(normal, normalize(hitpoint3 - light.pos)) * -1.0f) + 0.5f;
-
-				float specular = 0 * pow(cosine_factor3, 2);
-
-				pix[work_item_id] = rgb(toInt((tr.color * cosine_factor3 + tr.color * specular).x), toInt((tr.color * cosine_factor3 + tr.color * specular).y), toInt((tr.color * cosine_factor3 + tr.color * specular).z));
-				alreadyColored = false;
-				break;
-
-			}
-		}*/
 		setPosition(cc.vertices, -cc.pos);
 
 	}
@@ -552,23 +494,5 @@ __kernel void render_kernel(int width, int height, int rendermode, __global unsi
 		{
 			pix[work_item_id] = rgb(toInt(result + 0.2f), toInt(1/result + 0.2f), toInt(result + 0.2f));
 		}
-		
-		
 	}
-
-    /*if (t > 1e19 && rendermode != 1) { return; }
-
-    float3 hitpoint = camray.origin + camray.dir * t;
-	float3 normal = normalize(hitpoint - sphere1.pos);
-	float cosine_factor = (dot(normal, normalize(hitpoint - light.pos)) * -1.0f) + 0.5f;
-
-	/* for more interesting lighting: compute normal
-    	and cosine of angle between normal and ray direction 
-    	float3 hitpoint2 = camray.origin + camray.dir * t2;
-    	float3 normal2 = normalize(hitpoint2 - sphere2.pos);
-    	float cosine_factor2 = (dot(normal2, normalize(hitpoint2 - light.pos)) * -1.0f) + 0.5f;
-
-    pix[work_item_id] = rgb(toInt((sphere1.color * cosine_factor).x), toInt((sphere1.color * cosine_factor).y), toInt((sphere1.color * cosine_factor).z));*/
-
-
 }
