@@ -16,7 +16,7 @@ project(VoxRay)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMAKE")
-set(SOURCE_FILES    src/main.cpp src/Core.h src/hud.h src/hud.cpp src/Image.cpp src/image.h src/Menu.h src/Menu.cpp)
+set(SOURCE_FILES    src/main.cpp src/core/Core.h src/game_interfaces/hud.h src/game_interfaces/hud.cpp src/core/Image.cpp src/core/image.h src/game_interfaces/Menu.h src/game_interfaces/Menu.cpp)
 
 Message("")
 Message( STATUS "SOURCE entry point : " ${SOURCE_FILES} )

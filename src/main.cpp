@@ -2,8 +2,8 @@
 #include <fstream>
 #include <vector>
 #include <chrono>
-#include "Core.h"
-#include "hud.h"
+#include "core/Core.h"
+#include "game_interfaces/hud.h"
 
 // For visualStudio
 #pragma warning(disable : 4996)
@@ -60,9 +60,6 @@ int main(int argc, char* argv[]) {
 
 	hud hud(renderer);
 	Menu menu(renderer);
-	/*SDL_Surface* image = SDL_LoadBMP("background.bmp");
-	SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, image);
-	SDL_Rect dstrect = { 5, 5, 320, 240 };*/
 
 	int alea1 = rand() % 3;
 	int alea2 = rand() % 3;

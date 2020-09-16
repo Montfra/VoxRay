@@ -1,15 +1,11 @@
-//
-// Created by Valentin MUNIER on 12/01/2020.
-//
-
 #ifndef RAY_CORE_H
 #define RAY_CORE_H
 
 #include <OpenCL/opencl.h>
 #include <SDL.h>
 #include <iostream>
-#include "Menu.h"
-#include "hud.h"
+#include "../game_interfaces/Menu.h"
+#include "../game_interfaces/hud.h"
 
 // CONSTANT
 const int image_width = 1280;

@@ -1,5 +1,5 @@
 #pragma once
-#include "image.h"
+#include "../core/image.h"
 
 class hud
 {
