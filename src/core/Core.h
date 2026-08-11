@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <iostream>
+#include <vector>
 #include "../game_interfaces/Menu.h"
 #include "../game_interfaces/hud.h"
 
@@ -72,7 +73,17 @@ void initOpenCL(const char *KernelSource) {
     context = clCreateContext(0, 1, &device_id, NULL, NULL, &err);
     commands = clCreateCommandQueue(context, device_id, 0, &err);
     program = clCreateProgramWithSource(context, 1, (const char **) & KernelSource, NULL, &err);
-    clBuildProgram(program, 0, NULL, NULL, NULL, NULL);
+
+    if (clBuildProgram(program, 0, NULL, NULL, NULL, NULL) != CL_SUCCESS) {
+        size_t logSize;
+        clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, 0, NULL, &logSize);
+        std::vector<char> buildLog(logSize + 1);
+        clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, logSize, buildLog.data(), NULL);
+        buildLog[logSize] = '\0';
+        std::cerr << "\nOpenCL kernel build failed:\n" << buildLog.data() << std::endl;
+        exit(1);
+    }
+
     kernel = clCreateKernel(program, "render_kernel", &err);
 }
 

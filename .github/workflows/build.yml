@@ -16,8 +16,10 @@ jobs:
         include:
           - os: ubuntu-latest
             name: linux
-          - os: macos-latest
-            name: macos
+          - os: macos-13
+            name: macos-intel
+          - os: macos-14
+            name: macos-arm64
           - os: windows-latest
             name: windows
 
@@ -35,8 +37,10 @@ jobs:
 
       - name: Install dependencies (macOS)
         if: runner.os == 'macOS'
-        run: brew install sdl2
+        run: brew install sdl2 dylibbundler
         # OpenCL ships as a system framework on macOS, nothing to install.
+        # dylibbundler is used after the build to make the app relocatable
+        # (see "Bundle dylibs" below).
 
       - name: Install dependencies (Windows)
         if: runner.os == 'Windows'
@@ -59,6 +63,32 @@ jobs:
 
       - name: Build
         run: cmake --build build --config Release --parallel
+
+      # ---- Make the build relocatable (so it runs on a machine without ---- #
+      # ---- Homebrew/vcpkg installed) ---- #
+
+      - name: Bundle dylibs (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          dylibbundler -od -b \
+            -x build/bin/VoxRay \
+            -d build/bin/libs \
+            -p @executable_path/libs/
+        # Homebrew's SDL2 is a shared dylib referenced by its absolute
+        # /opt/homebrew (or /usr/local) install path, which only exists on the
+        # machine that built it. dylibbundler copies it (and its own
+        # dependencies) next to the executable and rewrites the load commands
+        # to use a relative @executable_path, so the app runs on any Mac.
+
+      - name: Bundle DLLs (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Copy-Item "$env:VCPKG_INSTALLATION_ROOT/installed/x64-windows/bin/SDL2.dll" -Destination build/bin/
+        # SDL2 is linked dynamically; ship SDL2.dll next to the executable so
+        # it runs on a machine without SDL2 installed. OpenCL.dll is not
+        # bundled: it is provided by the GPU vendor's driver and must already
+        # be present on the target machine.
 
       # ---- Package & upload ---- #
 

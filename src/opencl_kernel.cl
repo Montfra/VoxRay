@@ -52,7 +52,7 @@ bool intersect_triangle(const struct Triangle* t, const struct Ray* r, float* tn
 
 
 
-bool intersect_cube(const struct Cube* cube, const struct Ray* r, float3* normal, float* t) {
+bool intersect_cube(struct Cube* cube, const struct Ray* r, float3* normal, float* t) {
 	cube->pos.x -= 0.5f;
 	cube->pos.y -= 0.25f;
 	
@@ -200,7 +200,7 @@ void setPosition(float* model, float3 position) {
 }
 
 float3 reflect(float3 I, float3 N) {
-	return I - dot(dot(N, 2.f), dot(I, N));
+	return I - 2.0f * dot(I, N) * N;
 }
 
 __kernel void render_kernel(int width, int height, int rendermode, __global unsigned int* pix, __global float* model)
@@ -438,8 +438,8 @@ __kernel void render_kernel(int width, int height, int rendermode, __global unsi
 		
 		
 		cc.color = (float3)(0.5f * red, 0.5f * red, 0.9f * red);
+		cc.vertices = mdl;
 		setPosition(cc.vertices, cc.pos);
-		cc.vertices = &mdl;
 
 		float tnear;
 		float3 normal;

@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <vector>
 #include <chrono>
 #include "core/Core.h"
@@ -45,11 +46,9 @@ int main(int argc, char* argv[]) {
         system("PAUSE");
         exit(1);
     }
-    while (!file.eof()){
-        char line[256];
-        file.getline(line, 255);
-        source += line;
-    }
+    stringstream sourceStream;
+    sourceStream << file.rdbuf();
+    source = sourceStream.str();
     const char *kernelSource = source.c_str();
 
 

@@ -76,17 +76,30 @@ TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${SDL2_LIBRARY} ${OpenCL_LIBRARIES})
 
 # ------- Copy resources next to the executable ------- #
 
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+# Plain POST_BUILD custom commands only re-run when the target itself gets
+# relinked, so they'd miss edits to opencl_kernel.cl or ressources/ that don't
+# touch any C++ source. Use a proper OUTPUT/DEPENDS rule instead so these are
+# re-copied on every build whenever the source files actually changed.
+set(KERNEL_STAMP ${CMAKE_BINARY_DIR}/bin/opencl_kernel.cl)
+add_custom_command(OUTPUT ${KERNEL_STAMP}
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${CMAKE_SOURCE_DIR}/src/opencl_kernel.cl
-        $<TARGET_FILE_DIR:${PROJECT_NAME}>/opencl_kernel.cl)
+        ${KERNEL_STAMP}
+        DEPENDS ${CMAKE_SOURCE_DIR}/src/opencl_kernel.cl)
 
 # Game code loads bitmaps from "../ressources" relative to the executable
 # (i.e. one directory above CMAKE_RUNTIME_OUTPUT_DIRECTORY), so mirror that here.
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+set(RESSOURCES_STAMP ${CMAKE_BINARY_DIR}/ressources.stamp)
+file(GLOB_RECURSE RESSOURCE_FILES ${CMAKE_SOURCE_DIR}/ressources/*)
+add_custom_command(OUTPUT ${RESSOURCES_STAMP}
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CMAKE_SOURCE_DIR}/ressources
-        ${CMAKE_BINARY_DIR}/ressources)
+        ${CMAKE_BINARY_DIR}/ressources
+        COMMAND ${CMAKE_COMMAND} -E touch ${RESSOURCES_STAMP}
+        DEPENDS ${RESSOURCE_FILES})
+
+add_custom_target(CopyGameData ALL DEPENDS ${KERNEL_STAMP} ${RESSOURCES_STAMP})
+add_dependencies(${PROJECT_NAME} CopyGameData)
 
 # ------- End ----------- #
 
