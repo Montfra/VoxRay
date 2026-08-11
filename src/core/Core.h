@@ -64,9 +64,22 @@ void selectDevice(cl_device_id* device_id) {
         fprintf(stdout, "%s\n", buf);
     }
 
-    clGetDeviceIDs(NULL, CL_DEVICE_TYPE_GPU, deviceChoice, device_id, NULL);
-
     free(devices);
+
+    // Prefer a GPU device. Fall back to a CPU OpenCL device (e.g. a VM
+    // without GPU passthrough, or a machine with no dedicated GPU) so the
+    // game still runs -- just slower -- instead of silently handing
+    // clCreateContext an uninitialized device_id.
+    cl_uint found = 0;
+    clGetDeviceIDs(NULL, CL_DEVICE_TYPE_GPU, 1, device_id, &found);
+    if (found == 0) {
+        std::cout << "No GPU OpenCL device found, falling back to CPU (this will be slow)." << std::endl;
+        clGetDeviceIDs(NULL, CL_DEVICE_TYPE_CPU, 1, device_id, &found);
+    }
+    if (found == 0) {
+        std::cerr << "No OpenCL device (GPU or CPU) found. Exiting..." << std::endl;
+        exit(1);
+    }
 }
 
 void initOpenCL(const char *KernelSource) {

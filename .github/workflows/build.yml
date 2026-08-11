@@ -37,10 +37,11 @@ jobs:
 
       - name: Install dependencies (macOS)
         if: runner.os == 'macOS'
-        run: brew install sdl2 dylibbundler
+        run: brew install sdl2 sdl3 dylibbundler
         # OpenCL ships as a system framework on macOS, nothing to install.
-        # dylibbundler is used after the build to make the app relocatable
-        # (see "Bundle dylibs" below).
+        # "sdl2" is actually sdl2-compat, a shim that dlopen()s the real sdl3
+        # at runtime instead of linking it (see "Bundle dylibs" below).
+        # dylibbundler is used after the build to make the app relocatable.
 
       - name: Install dependencies (Windows)
         if: runner.os == 'Windows'
@@ -70,15 +71,33 @@ jobs:
       - name: Bundle dylibs (macOS)
         if: runner.os == 'macOS'
         run: |
+          set -euo pipefail
+          mkdir -p build/bin/libs
+
+          # sdl2-compat (what "brew install sdl2" ships) doesn't link SDL3 as
+          # a normal dependency; it dlopen()s it by name at runtime, trying
+          # "@loader_path/libSDL3.dylib" first (i.e. next to whichever dylib
+          # is doing the loading). otool -L never sees this, so dylibbundler
+          # can't discover or bundle it on its own — drop a real copy exactly
+          # where it will look.
+          cp -L "$(brew --prefix sdl3)/lib/libSDL3.dylib" build/bin/libs/libSDL3.dylib
+
+          # Homebrew's SDL2 (and SDL3) are shared dylibs referenced by their
+          # absolute /opt/homebrew (or /usr/local) install path, which only
+          # exists on the machine that built them. dylibbundler copies them
+          # (and their own dependencies) next to the executable and rewrites
+          # the load commands to use a relative @executable_path, so the app
+          # runs on any Mac.
           dylibbundler -od -b \
             -x build/bin/VoxRay \
+            -x build/bin/libs/libSDL3.dylib \
             -d build/bin/libs \
             -p @executable_path/libs/
-        # Homebrew's SDL2 is a shared dylib referenced by its absolute
-        # /opt/homebrew (or /usr/local) install path, which only exists on the
-        # machine that built it. dylibbundler copies it (and its own
-        # dependencies) next to the executable and rewrites the load commands
-        # to use a relative @executable_path, so the app runs on any Mac.
+
+          # Re-sign after dylibbundler rewrote load commands: unsigned/stale
+          # signatures are rejected at launch on Apple Silicon.
+          codesign --force -s - build/bin/libs/*.dylib
+          codesign --force -s - build/bin/VoxRay
 
       - name: Bundle DLLs (Windows)
         if: runner.os == 'Windows'
