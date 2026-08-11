@@ -1,8 +1,14 @@
 #ifndef RAY_CORE_H
 #define RAY_CORE_H
 
+#ifdef __APPLE__
 #include <OpenCL/opencl.h>
+#else
+#include <CL/cl.h>
+#endif
 #include <SDL.h>
+#include <cstdlib>
+#include <cstdio>
 #include <iostream>
 #include "../game_interfaces/Menu.h"
 #include "../game_interfaces/hud.h"

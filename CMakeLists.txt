@@ -14,8 +14,17 @@ project(VoxRay)
 # ------- Set Vars ------- #
 
 set(CMAKE_C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMAKE")
+# Multi-config generators (Visual Studio, Xcode) otherwise append a per-config
+# subfolder (e.g. bin/Release), which breaks the "../ressources" relative
+# paths the game uses to load its bitmaps.
+foreach(OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
+    string(TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_BINARY_DIR}/bin)
+endforeach()
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
 set(SOURCE_FILES    src/main.cpp src/core/Core.h src/game_interfaces/hud.h src/game_interfaces/hud.cpp src/core/Image.cpp src/core/image.h src/game_interfaces/Menu.h src/game_interfaces/Menu.cpp)
 
 Message("")
@@ -44,14 +53,40 @@ ELSE()
     Message( FATAL_ERROR "SDL2 NOT FOUND" )
 ENDIF()
 
+FIND_PACKAGE(OpenCL REQUIRED)
+Message("")
+Message( STATUS "FINDING OpenCL" )
+IF (${OpenCL_FOUND})
+    Message( STATUS "OpenCL_FOUND: " ${OpenCL_FOUND})
+    Message( STATUS "OpenCL_INCLUDE_DIRS: " ${OpenCL_INCLUDE_DIRS})
+    Message( STATUS "OpenCL_LIBRARIES: " ${OpenCL_LIBRARIES})
+ELSE()
+    Message( STATUS "OpenCL_FOUND: " ${OpenCL_FOUND})
+    Message( FATAL_ERROR "OpenCL NOT FOUND" )
+ENDIF()
+
 # file(COPY resources DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 # ------- End Finds ------ #
 
 # ------- Inc & Link ---- #
 
-INCLUDE_DIRECTORIES(${SDL2_INCLUDE_DIR})
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${SDL2_LIBRARY} "-framework OpenCL")
+INCLUDE_DIRECTORIES(${SDL2_INCLUDE_DIR} ${OpenCL_INCLUDE_DIRS})
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${SDL2_LIBRARY} ${OpenCL_LIBRARIES})
+
+# ------- Copy resources next to the executable ------- #
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${CMAKE_SOURCE_DIR}/src/opencl_kernel.cl
+        $<TARGET_FILE_DIR:${PROJECT_NAME}>/opencl_kernel.cl)
+
+# Game code loads bitmaps from "../ressources" relative to the executable
+# (i.e. one directory above CMAKE_RUNTIME_OUTPUT_DIRECTORY), so mirror that here.
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/ressources
+        ${CMAKE_BINARY_DIR}/ressources)
 
 # ------- End ----------- #
 
