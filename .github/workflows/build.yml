@@ -121,7 +121,8 @@ jobs:
         run: |
           mkdir -p dist/VoxRay-${{ matrix.name }}
           cp -r build/bin/. dist/VoxRay-${{ matrix.name }}/
-          cp -r build/ressources dist/VoxRay-${{ matrix.name }}/ressources
+          # ressources/ is already inside build/bin/ (see CMakeLists.txt) and
+          # was just copied above alongside the executable.
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

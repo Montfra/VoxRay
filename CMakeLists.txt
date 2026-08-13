@@ -87,14 +87,15 @@ add_custom_command(OUTPUT ${KERNEL_STAMP}
         ${KERNEL_STAMP}
         DEPENDS ${CMAKE_SOURCE_DIR}/src/opencl_kernel.cl)
 
-# Game code loads bitmaps from "../ressources" relative to the executable
-# (i.e. one directory above CMAKE_RUNTIME_OUTPUT_DIRECTORY), so mirror that here.
+# Game code resolves bitmaps against "<exeDir>/ressources/" at runtime (via
+# SDL_GetBasePath(), see core/image.h), so mirror that here: ressources/ must
+# be a sibling of the executable, not a level above it.
 set(RESSOURCES_STAMP ${CMAKE_BINARY_DIR}/ressources.stamp)
 file(GLOB_RECURSE RESSOURCE_FILES ${CMAKE_SOURCE_DIR}/ressources/*)
 add_custom_command(OUTPUT ${RESSOURCES_STAMP}
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CMAKE_SOURCE_DIR}/ressources
-        ${CMAKE_BINARY_DIR}/ressources
+        ${CMAKE_BINARY_DIR}/bin/ressources
         COMMAND ${CMAKE_COMMAND} -E touch ${RESSOURCES_STAMP}
         DEPENDS ${RESSOURCE_FILES})
 

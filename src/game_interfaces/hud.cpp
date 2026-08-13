@@ -1,12 +1,12 @@
 #include "hud.h"
 
-hud::hud(SDL_Renderer* renderer) : score(renderer, "../ressources/score.bmp", &r1),
-a(renderer, "../ressources/a.bmp", &ra),
-aA(renderer, "../ressources/aA.bmp", &ra),
-e(renderer, "../ressources/e.bmp", &re),
-eE(renderer, "../ressources/eE.bmp", &re),
-z(renderer, "../ressources/z.bmp", &rz),
-zZ(renderer, "../ressources/zZ.bmp", &rz),
+hud::hud(SDL_Renderer* renderer) : score(renderer, resourcePath("score.bmp").c_str(), &r1),
+a(renderer, resourcePath("a.bmp").c_str(), &ra),
+aA(renderer, resourcePath("aA.bmp").c_str(), &ra),
+e(renderer, resourcePath("e.bmp").c_str(), &re),
+eE(renderer, resourcePath("eE.bmp").c_str(), &re),
+z(renderer, resourcePath("z.bmp").c_str(), &rz),
+zZ(renderer, resourcePath("zZ.bmp").c_str(), &rz),
 ba(false), bz(false), be(false) {
 	score.setValue(0);
 }

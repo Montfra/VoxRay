@@ -1,5 +1,23 @@
 #include "image.h"
 
+std::string getBasePath() {
+	static std::string cached;
+	static bool computed = false;
+	if (!computed) {
+		char* path = SDL_GetBasePath();
+		cached = path ? path : "./";
+		if (path) {
+			SDL_free(path);
+		}
+		computed = true;
+	}
+	return cached;
+}
+
+std::string resourcePath(const std::string& fileName) {
+	return getBasePath() + "ressources/" + fileName;
+}
+
 Image::Image(SDL_Renderer* render, const char* imagePath, SDL_Rect* rect) :
 	dstrect(rect), isDigit(false)
 {

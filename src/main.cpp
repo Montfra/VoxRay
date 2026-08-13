@@ -4,6 +4,7 @@
 #include <vector>
 #include <chrono>
 #include "core/Core.h"
+#include "core/image.h"
 #include "game_interfaces/hud.h"
 
 // For visualStudio
@@ -11,9 +12,6 @@
 
 using namespace std::chrono;
 using namespace std;
-
-// CONSTANT
-const string programPath = "opencl_kernel.cl";
 
 float sphereSize = 100; // sphere size
 float speed = -0.5; // speed of animation
@@ -39,10 +37,14 @@ void executeProgram() {
 int main(int argc, char* argv[]) {
 
     // GET PROGRAM
+    // Resolved against the executable's own directory (not the process's
+    // current working directory), which varies depending on how the game
+    // is launched (terminal, double-click, IDE, ...).
+    string programPath = getBasePath() + "opencl_kernel.cl";
     string source;
     ifstream file(programPath);
     if (!file){
-        cout << "\nNo OpenCL file found!" << endl << "Exiting..." << endl;
+        cout << "\nNo OpenCL file found! Looked in: " << programPath << endl << "Exiting..." << endl;
         system("PAUSE");
         exit(1);
     }
