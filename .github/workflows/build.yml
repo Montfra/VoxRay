@@ -16,8 +16,6 @@ jobs:
         include:
           - os: ubuntu-latest
             name: linux
-          - os: macos-13
-            name: macos-intel
           - os: macos-14
             name: macos-arm64
           - os: windows-latest
@@ -88,7 +86,14 @@ jobs:
           # (and their own dependencies) next to the executable and rewrites
           # the load commands to use a relative @executable_path, so the app
           # runs on any Mac.
-          dylibbundler -od -b \
+          #
+          # NOTE: -od (--overwrite-dir) erases build/bin/libs/ before doing
+          # anything else, which would delete the libSDL3.dylib we just
+          # copied in above (dylibbundler then fails trying to chmod a file
+          # it just deleted). Use -of/-cd instead: they allow overwriting
+          # individual files and creating the dir if missing, without
+          # wiping out what's already there.
+          dylibbundler -of -cd -b \
             -x build/bin/VoxRay \
             -x build/bin/libs/libSDL3.dylib \
             -d build/bin/libs \
