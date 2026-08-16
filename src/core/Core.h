@@ -17,7 +17,6 @@
 // CONSTANT
 const int image_width = 1280;
 const int image_height = 720;
-const int deviceChoice = 1;
 
 // PROGRAM
 cl_mem pix;
@@ -44,39 +43,70 @@ SDL_Event event;
 
 //**  OPENCL  **//
 void selectDevice(cl_device_id* device_id) {
-    // Init var
-    cl_uint num_devices, i;
-
-    // get number devices
-    clGetDeviceIDs(NULL, CL_DEVICE_TYPE_ALL, 0, NULL, &num_devices);
-
-    // Get all devices
-    cl_device_id* devices = static_cast<cl_device_id *>(calloc(sizeof(cl_device_id), num_devices));
-    clGetDeviceIDs(NULL, CL_DEVICE_TYPE_ALL, num_devices, devices, NULL);
-
-    char buf[128];
-    for (i = 0; i < num_devices; i++) {
-        if (i == deviceChoice) {std::cout << "Your choice this device -> ";}
-        clGetDeviceInfo(devices[i], CL_DEVICE_NAME, 128, buf, NULL);
-        fprintf(stdout, "Device %s supports ", buf);
-
-        clGetDeviceInfo(devices[i], CL_DEVICE_VERSION, 128, buf, NULL);
-        fprintf(stdout, "%s\n", buf);
+    // Passing platform=NULL to clGetDeviceIDs is only "implementation-defined"
+    // per the OpenCL spec: it happens to work when a single ICD (vendor
+    // OpenCL driver) is registered on the system (e.g. an NVIDIA-only Linux
+    // box), but once more than one is registered -- e.g. a Windows PC with
+    // both an Intel CPU/iGPU OpenCL runtime and an NVIDIA GPU driver -- the
+    // ICD loader has to arbitrarily pick one or fail, which can hand back an
+    // invalid/mismatched device handle. That's what produced the garbled
+    // "Device <garbage> supports <garbage>" output: clGetDeviceInfo() failed
+    // silently on that bad handle and printf'd an uninitialized buffer.
+    // Fix: always go through clGetPlatformIDs() and query each platform
+    // explicitly instead of relying on NULL.
+    cl_uint num_platforms = 0;
+    clGetPlatformIDs(0, NULL, &num_platforms);
+    if (num_platforms == 0) {
+        std::cerr << "No OpenCL platform found. Exiting..." << std::endl;
+        exit(1);
     }
 
-    free(devices);
+    std::vector<cl_platform_id> platforms(num_platforms);
+    clGetPlatformIDs(num_platforms, platforms.data(), NULL);
+
+    std::vector<cl_device_id> gpuDevices;
+    std::vector<cl_device_id> cpuDevices;
+
+    char buf[128];
+    for (cl_uint p = 0; p < num_platforms; p++) {
+        cl_uint num_devices = 0;
+        clGetDeviceIDs(platforms[p], CL_DEVICE_TYPE_ALL, 0, NULL, &num_devices);
+        if (num_devices == 0) {
+            continue;
+        }
+
+        std::vector<cl_device_id> devices(num_devices);
+        clGetDeviceIDs(platforms[p], CL_DEVICE_TYPE_ALL, num_devices, devices.data(), NULL);
+
+        for (cl_uint i = 0; i < num_devices; i++) {
+            buf[0] = '\0';
+            clGetDeviceInfo(devices[i], CL_DEVICE_NAME, sizeof(buf), buf, NULL);
+            fprintf(stdout, "Device %s supports ", buf);
+
+            buf[0] = '\0';
+            clGetDeviceInfo(devices[i], CL_DEVICE_VERSION, sizeof(buf), buf, NULL);
+            fprintf(stdout, "%s\n", buf);
+
+            cl_device_type type = 0;
+            clGetDeviceInfo(devices[i], CL_DEVICE_TYPE, sizeof(type), &type, NULL);
+            if (type & CL_DEVICE_TYPE_GPU) {
+                gpuDevices.push_back(devices[i]);
+            } else if (type & CL_DEVICE_TYPE_CPU) {
+                cpuDevices.push_back(devices[i]);
+            }
+        }
+    }
 
     // Prefer a GPU device. Fall back to a CPU OpenCL device (e.g. a VM
     // without GPU passthrough, or a machine with no dedicated GPU) so the
     // game still runs -- just slower -- instead of silently handing
     // clCreateContext an uninitialized device_id.
-    cl_uint found = 0;
-    clGetDeviceIDs(NULL, CL_DEVICE_TYPE_GPU, 1, device_id, &found);
-    if (found == 0) {
+    if (!gpuDevices.empty()) {
+        *device_id = gpuDevices.front();
+    } else if (!cpuDevices.empty()) {
         std::cout << "No GPU OpenCL device found, falling back to CPU (this will be slow)." << std::endl;
-        clGetDeviceIDs(NULL, CL_DEVICE_TYPE_CPU, 1, device_id, &found);
-    }
-    if (found == 0) {
+        *device_id = cpuDevices.front();
+    } else {
         std::cerr << "No OpenCL device (GPU or CPU) found. Exiting..." << std::endl;
         exit(1);
     }
